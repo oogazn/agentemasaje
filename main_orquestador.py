@@ -1,80 +1,40 @@
-﻿# main_orquestador.py
+# main_orquestador.py
 import os
 import sys
-import pandas as pd
-from dotenv import load_dotenv
 from agentes.meta_explorador import MetaExplorador
-from agentes.explorador import AgenteExplorador
-from agentes.clasificador import AgenteClasificador
 
-load_dotenv()
-API_KEY = os.getenv('KEY_1')
-PATH_CRUDO = "datos/crudo/datos_brutos.csv"
-PATH_PROCESADO = "datos/procesado/leads_calificados.csv"
+def pausa_reporte(titulo, mensaje):
+    """Genera un bloqueo visual en pantalla para revisión de Oscar"""
+    print(f"\n{'━'*60}")
+    print(f"📋 REPORTE DE PASO: {titulo}")
+    print(f"🔹 ESTADO: {mensaje}")
+    print(f"{'━'*60}")
+    input(">>> [CONTROL] Presione ENTER para continuar al siguiente paso...")
 
-def reporte_paso(titulo, detalle):
-    print(f"\n{'━'*65}\n📊 {titulo}\n{'━'*65}\n{detalle}\n{'━'*65}")
-    if input(">>> ENTER para continuar / 'exit' para salir: ").lower().strip() == 'exit': sys.exit()
-
-def obtener_resumen(path):
-    if os.path.exists(path):
-        df = pd.read_csv(path)
-        return f"{len(df)} registros ({os.path.getsize(path)/1024:.2f} KB)"
-    return "Archivo no existe"
-
-def iniciar():
-    os.makedirs("datos/crudo", exist_ok=True)
-    os.makedirs("datos/procesado", exist_ok=True)
-
+def iniciar_sistema():
+    print(f"\n🚀 ECOSISTEMA DE AGENTES - MODO PASO A PASO (Usuario: Oscar)")
+    
+    # --- PASO 1: INSTANCIACIÓN ---
     try:
-        # FASE 0: Estrategia
-        a0 = MetaExplorador(API_KEY)
-        plan = a0.descubrir_fuentes()
-        reporte_paso("AGENTE 0 - ESTRATEGIA DE CALIDAD", f"FUENTES: {plan['fuente_prioritaria']}\nCOMANDOS: {plan['comandos_busqueda']}")
-
-        # FASE 1: Exploración
-        a1 = AgenteExplorador()
-        # Intentamos Reddit y si está vacío, el usuario puede cargar manual en el CSV crudo
-        datos = a1.buscar_en_reddit(plan['terminos_pareto'])
-        
-        if not datos and os.path.exists(PATH_CRUDO):
-            print("💡 No hay nuevos en Reddit. Cargando datos previos del archivo crudo...")
-            datos = pd.read_csv(PATH_CRUDO).to_dict('records')
-
-        if datos:
-            pd.DataFrame(datos).to_csv(PATH_CRUDO, index=False)
-            reporte_paso("AGENTE A - EXPLORACIÓN", f"Registros en memoria: {len(datos)}\n💾 ARCHIVO CRUDO: {obtener_resumen(PATH_CRUDO)}")
-        else:
-            reporte_paso("AGENTE A - EXPLORACIÓN", "AVISO: 0 datos encontrados. Agregue leads en datos/crudo/datos_brutos.csv manualmente."); return
-
-        # FILTRO HISTORIAL
-        vistos = set(pd.read_csv(PATH_PROCESADO)['texto'].astype(str).tolist()) if os.path.exists(PATH_PROCESADO) else set()
-        por_procesar = [d for d in datos if str(d['texto']) not in vistos]
-        reporte_paso("FILTRO HISTORIAL", f"Nuevos para procesar: {len(por_procesar)} (Saltados: {len(datos)-len(por_procesar)})")
-
-        if not por_procesar: return
-
-        # FASE 2: Clasificación
-        cla = AgenteClasificador(API_KEY)
-        calificados = []
-        for i, d in enumerate(por_procesar):
-            print(f"🧹 Clasificando {i+1}/{len(por_procesar)}...", end="\r")
-            res = cla.validar_relevancia(d['texto'])
-            if res.get('es_relevante'):
-                d.update(res); calificados.append(d)
-
-        # FASE 3: Guardado
-        if calificados:
-            df = pd.DataFrame(calificados)
-            df.to_csv(PATH_PROCESADO, mode='a', header=not os.path.exists(PATH_PROCESADO), index=False)
-            reporte_paso("AGENTE A.1 - FINALIZADO", f"Leads calificados hoy: {len(calificados)}\n💾 ARCHIVO PROCESADO: {obtener_resumen(PATH_PROCESADO)}")
-        else:
-            reporte_paso("AGENTE A.1 - FINALIZADO", "Ningún lead nuevo fue relevante.")
-
+        agente_a = MetaExplorador(nombre="Agente A - Explorador")
+        pausa_reporte("INICIALIZACIÓN", "Agentes cargados y listos para operar.")
     except Exception as e:
-        print(f"❌ Error: {e}")
-    finally:
-        input("\n>>> [FIN] ENTER para cerrar terminal...")
+        print(f"❌ Error al cargar agentes: {e}")
+        return
+
+    # --- PASO 2: BÚSQUEDA ---
+    dork = "site:facebook.com/groups 'necesito masaje' Chile"
+    print(f"\n🛰️ Solicitando búsqueda activa...")
+    agente_a.descubrir_fuentes(dork)
+    
+    # Nota: El Agente A ya tiene su propio ENTER interno para el reporte de KB,
+    # pero este refuerza el fin de la fase de búsqueda.
+    pausa_reporte("FUEGO DE BÚSQUEDA", "Fase de exploración completada. Datos guardados en crudo.")
+
+    # --- PASO 3: FINALIZACIÓN ---
+    print(f"\n✅ CICLO COMPLETADO EXITOSAMENTE")
+    print(f"📁 Los leads están disponibles en datos/crudo/datos_brutos.csv")
+    input("\n>>> [FIN DEL PROCESO] Presione ENTER para cerrar la terminal...")
 
 if __name__ == "__main__":
-    iniciar()
+    iniciar_sistema()
