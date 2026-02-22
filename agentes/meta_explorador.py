@@ -1,25 +1,46 @@
 ﻿# agentes/meta_explorador.py
-import google.generativeai as genai
-import json
-import re
+import os
+import pandas as pd
+from googlesearch import search
 
 class MetaExplorador:
-    def __init__(self, api_key):
-        """Nombre del archivo: agentes/meta_explorador.py"""
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+    def __init__(self):
+        self.ruta_crudo = "datos/crudo/datos_brutos.csv"
+        os.makedirs("datos/crudo", exist_ok=True)
+
+    def ejecutar_busqueda(self, query, num_results=10):
+        print(f"\n🔍 AGENTE A: Iniciando búsqueda activa para: {query}")
+        leads_encontrados = []
         
-        self.fuentes_respaldo = ["facebook.com/groups", "instagram.com", "doctoralia.cl", "reclamos.cl"]
-        self.listado_maestro = ["masaje descontracturante", "masaje relajante", "fisioterapia", "dolor lumbar", "lumbago"]
-
-    def descubrir_fuentes(self, fuentes_previas=None):
-        prompt = f"Actúa como experto SEO Chile. Fuentes: {self.fuentes_respaldo}. Elige 10 términos Pareto de mi lista y crea 3 comandos site: para Chile. Responde SOLO JSON: {{'terminos_pareto': [], 'comandos_busqueda': [], 'fuente_prioritaria': ''}}"
         try:
-            response = self.model.generate_content(prompt)
-            match = re.search(r'\{.*\}', response.text, re.DOTALL)
-            return json.loads(match.group()) if match else self._respaldo()
-        except:
-            return self._respaldo()
+            # Ejecuta la búsqueda real en Google (Dorks de Facebook/Instagram)
+            for resultado in search(query, num_results=num_results, lang="es"):
+                leads_encontrados.append({"texto": resultado, "fuente": "Google_Search_Chile"})
+            
+            if leads_encontrados:
+                self.guardar_datos(leads_encontrados)
+            else:
+                print("⚠️ No se hallaron resultados nuevos en esta pasada.")
+                
+        except Exception as e:
+            print(f"❌ Error de conexión o bloqueo: {e}")
 
-    def _respaldo(self):
-        return {"terminos_pareto": self.listado_maestro, "comandos_busqueda": [f"site:{f} Chile 'masaje'" for f in self.fuentes_respaldo[:2]], "fuente_prioritaria": "Facebook Groups Chile"}
+    def guardar_datos(self, nuevos_leads):
+        df_nuevo = pd.DataFrame(nuevos_leads)
+        
+        if os.path.exists(self.ruta_crudo):
+            df_existente = pd.read_csv(self.ruta_crudo)
+            df_final = pd.concat([df_existente, df_nuevo]).drop_duplicates().reset_index(drop=True)
+        else:
+            df_final = df_nuevo
+
+        df_final.to_csv(self.ruta_crudo, index=False, encoding='utf-8')
+        
+        # --- REPORTE DE ESCRITURA OBLIGATORIO (Oscar) ---
+        print("-" * 60)
+        print(f"📊 REPORTE DE ESCRITURA EN PANTALLA")
+        print(f"✅ Se capturaron {len(nuevos_leads)} posibles leads nuevos.")
+        print(f"📁 Ubicación: {self.ruta_crudo}")
+        print(f"⚖️ Tamaño del archivo: {os.path.getsize(self.ruta_crudo) / 1024:.2f} KB")
+        print("-" * 60)
+        input(">>> ENTER para continuar al Clasificador...")
