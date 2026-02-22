@@ -1,40 +1,39 @@
 # main_orquestador.py
 import os
-import sys
 from agentes.meta_explorador import MetaExplorador
+# Importamos el Agente 0 (Asegúrate de tener este archivo en tu carpeta agentes)
+from agentes.estratega import AgenteEstratega 
 
-def pausa_reporte(titulo, mensaje):
-    """Genera un bloqueo visual en pantalla para revisión de Oscar"""
+def pausa(titulo, mensaje):
     print(f"\n{'━'*60}")
-    print(f"📋 REPORTE DE PASO: {titulo}")
-    print(f"🔹 ESTADO: {mensaje}")
+    print(f"📋 REPORTE: {titulo}")
+    print(f"🔹 {mensaje}")
     print(f"{'━'*60}")
-    input(">>> [CONTROL] Presione ENTER para continuar al siguiente paso...")
+    input(">>> [CONTROL] Presione ENTER para continuar...")
 
 def iniciar_sistema():
-    print(f"\n🚀 ECOSISTEMA DE AGENTES - MODO PASO A PASO (Usuario: Oscar)")
+    print(f"\n🚀 ECOSISTEMA DE AGENTES - MODO COMPLETO (Usuario: Oscar)")
     
-    # --- PASO 1: INSTANCIACIÓN ---
-    try:
-        agente_a = MetaExplorador(nombre="Agente A - Explorador")
-        pausa_reporte("INICIALIZACIÓN", "Agentes cargados y listos para operar.")
-    except Exception as e:
-        print(f"❌ Error al cargar agentes: {e}")
-        return
+    # --- PASO 1: AGENTE 0 (ESTRATEGIA) ---
+    estratega = AgenteEstratega()
+    print("\n🧠 Agente 0: Analizando mejores fuentes de Chile...")
+    comandos = estratega.generar_dorks() # Genera los links de Facebook/Instagram
+    
+    pausa("AGENTE 0 - ESTRATEGIA DE CALIDAD", f"Fuentes seleccionadas: {comandos}")
 
-    # --- PASO 2: BÚSQUEDA ---
-    dork = "site:facebook.com/groups 'necesito masaje' Chile"
-    print(f"\n🛰️ Solicitando búsqueda activa...")
-    agente_a.descubrir_fuentes(dork)
+    # --- PASO 2: AGENTE A (EXPLORACIÓN) ---
+    explorador = MetaExplorador(nombre="Agente A - Explorador")
+    print(f"\n🛰️ Iniciando búsqueda activa...")
     
-    # Nota: El Agente A ya tiene su propio ENTER interno para el reporte de KB,
-    # pero este refuerza el fin de la fase de búsqueda.
-    pausa_reporte("FUEGO DE BÚSQUEDA", "Fase de exploración completada. Datos guardados en crudo.")
+    # El Agente A ahora usa lo que el Agente 0 decidió
+    for dork in comandos:
+        explorador.descubrir_fuentes(dork)
+    
+    pausa("AGENTE A - EXPLORACIÓN", "Fase de búsqueda terminada y datos guardados.")
 
     # --- PASO 3: FINALIZACIÓN ---
     print(f"\n✅ CICLO COMPLETADO EXITOSAMENTE")
-    print(f"📁 Los leads están disponibles en datos/crudo/datos_brutos.csv")
-    input("\n>>> [FIN DEL PROCESO] Presione ENTER para cerrar la terminal...")
+    input("\n>>> [FIN] Presione ENTER para cerrar...")
 
 if __name__ == "__main__":
     iniciar_sistema()
