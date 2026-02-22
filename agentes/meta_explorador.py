@@ -5,22 +5,18 @@ from googlesearch import search
 
 class MetaExplorador:
     def __init__(self, nombre="Agente A - Explorador"):
-        """
-        Versión corregida para Oscar. Acepta el argumento 'nombre' del orquestador.
-        """
         self.nombre = nombre
         self.ruta_crudo = "datos/crudo/datos_brutos.csv"
         os.makedirs("datos/crudo", exist_ok=True)
 
+    def descubrir_fuentes(self, query): # <--- FUNCIÓN AGREGADA PARA CORREGIR ERROR
+        print(f"\n🔍 {self.nombre}: Ejecutando fase de descubrimiento...")
+        self.ejecutar_busqueda(query)
+
     def ejecutar_busqueda(self, query, num_results=10):
-        print(f"\n{'━'*60}")
-        print(f"🔍 {self.nombre}: Buscando activamente...")
-        print(f"🎯 Objetivo: {query}")
-        print(f"{'━'*60}")
-        
+        print(f"🎯 Buscando activamente: {query}")
         leads_encontrados = []
         try:
-            # Ejecuta búsqueda real. Requiere: pip install googlesearch-python
             for resultado in search(query, num_results=num_results, lang="es"):
                 leads_encontrados.append({"texto": resultado, "fuente": "Google_Search_Chile"})
             
@@ -44,11 +40,10 @@ class MetaExplorador:
 
         df_final.to_csv(self.ruta_crudo, index=False, encoding='utf-8')
         
-        # --- REPORTE EN PANTALLA ---
         tamano_kb = os.path.getsize(self.ruta_crudo) / 1024
         print(f"\n📊 REPORTE DE ESCRITURA (AGENTE A)")
         print(f"✅ Registros procesados: {len(nuevos_leads)}")
         print(f"📁 Destino: {self.ruta_crudo}")
         print(f"⚖️ Peso actual: {tamano_kb:.2f} KB")
-        print(f"{'━'*60}")
+        print("-" * 60)
         input(">>> Presione ENTER para continuar...")
