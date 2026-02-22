@@ -9,12 +9,13 @@ class MetaExplorador:
         self.ruta_crudo = "datos/crudo/datos_brutos.csv"
         os.makedirs("datos/crudo", exist_ok=True)
 
-    def descubrir_fuentes(self, query): # <--- FUNCIÓN AGREGADA PARA CORREGIR ERROR
-        print(f"\n🔍 {self.nombre}: Ejecutando fase de descubrimiento...")
+    def descubrir_fuentes(self, query):
+        """Función que el orquestador está buscando"""
+        print(f"\n🔍 {self.nombre}: Iniciando fase de descubrimiento...")
         self.ejecutar_busqueda(query)
 
     def ejecutar_busqueda(self, query, num_results=10):
-        print(f"🎯 Buscando activamente: {query}")
+        print(f"🎯 Buscando en la red: {query}")
         leads_encontrados = []
         try:
             for resultado in search(query, num_results=num_results, lang="es"):
@@ -43,7 +44,7 @@ class MetaExplorador:
         tamano_kb = os.path.getsize(self.ruta_crudo) / 1024
         print(f"\n📊 REPORTE DE ESCRITURA (AGENTE A)")
         print(f"✅ Registros procesados: {len(nuevos_leads)}")
-        print(f"📁 Destino: {self.ruta_crudo}")
-        print(f"⚖️ Peso actual: {tamano_kb:.2f} KB")
+        print(f"⚖️ Peso actual del archivo: {tamano_kb:.2f} KB")
         print("-" * 60)
-        input(">>> Presione ENTER para continuar...")
+        input(">>> ENTER para continuar...")
+
